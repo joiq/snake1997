@@ -17,36 +17,15 @@ let key = 'd',
     time = 200  ,
     scoreCount = 0;
 
-// const intervalId = setInterval(() => {
-//   ctx.clearRect(0, 0, width, height);
-//   drawScore();
-//   snake.move();
-//   snake.draw();
-//   apple.draw();
-// }, time);
-
 function drawScore() {
   scoreElement.textContent = scoreCount;
 }
 
-function endGame() {
-  endGameElement.style.visibility = 'visible';
-  clearInterval(intervalId);
-}
+
 
 function Block(col, row) {
   this.col = col;
   this.row = row;
-}
-
-function circle(x, y, radius, fillCircle) {
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2, false);
-  if (fillCircle) {
-    ctx.fill();
-  } else {
-    ctx.stroke();
-  }
 }
 
 Block.prototype.drawSquare = function(color) {
@@ -54,13 +33,6 @@ Block.prototype.drawSquare = function(color) {
   let y = this.row * blockSize;
   ctx.fillStyle = color;
   ctx.fillRect(x, y, blockSize, blockSize);
-};
-
-Block.prototype.drawApple = function(color) {
-  let centerX = this.col * blockSize + blockSize / 2;
-  let centerY = this.col * blockSize + blockSize / 2;
-  ctx.fillStyle = color;
-  circle(centerX, centerY, blockSize / 2, true);
 };
 
 Block.prototype.equal = function(otherBlock) {
@@ -80,11 +52,13 @@ Snake.prototype.draw = function() {
   for (let i = 0; i < this.segments.length; i++) {
     this.segments[i].drawSquare('#2F1124');
   }
+  console.log('Snake head col: ' + this.segments[0].col);
+  console.log('Snake head row: ' + this.segments[0].row);
 };
 
 Snake.prototype.checkCollision = function(head) {
-  let leftCollision = (head.col === 0),
-      topCollision = (head.row === 0),
+  let leftCollision = (head.col === -1),
+      topCollision = (head.row === -1),
       rightCollision = (head.col === widthInBlocks),
       bottomCollision = (head.row === heightInBlocks);
 
@@ -127,6 +101,7 @@ Snake.prototype.move = function() {
   this.segments.unshift(newHead);
 
   if (newHead.equal(apple.position)) {
+    console.log('snake eat apple');
     scoreCount += 10;
     apple.move();
   } else {
@@ -157,19 +132,38 @@ const directions = {
 
 window.addEventListener('keydown', (e) => {
   let newDir = directions[e.keyCode];
-  console.log(newDir);
 
   if (newDir !== undefined) {
     snake.setDir(newDir);
   }
 });
 
+function circle(x, y, radius, fillCircle) {
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+  if (fillCircle) {
+    ctx.fill();
+  } else {
+    ctx.stroke();
+  }
+}
+
+// Method which draw a circle
+Block.prototype.drawCircle = function(color) {
+  let centerX = this.col * blockSize + blockSize / 2;
+  let centerY = this.row * blockSize + blockSize / 2;
+  ctx.fillStyle = color;
+  circle(centerX, centerY, blockSize / 2, true);
+};
+
 function Apple() {
   this.position = new Block(Math.floor(Math.random() * (heightInBlocks)), Math.floor(Math.random() * (widthInBlocks)));
 }
 
 Apple.prototype.draw = function() {
-  this.position.drawApple('#D45A77');
+  this.position.drawCircle('#D45A77');
+  console.log('Apple col: ' + this.position.col);
+  console.log('Apple row: ' + this.position.row);
 };
 
 Apple.prototype.move = function() {
@@ -181,7 +175,13 @@ Apple.prototype.move = function() {
 const snake = new Snake();
 const apple = new Apple();
 
+function endGame(intervalId) {
+  endGameElement.style.visibility = 'visible';
+  clearInterval(intervalId);
+}
+
 function startGame() {
+  console.log(width, height);
   let intervalId = setInterval(() => {
     ctx.clearRect(0, 0, width, height);
     drawScore();
